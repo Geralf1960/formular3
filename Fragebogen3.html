@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digitaler Fragebogen</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+.question { margin-bottom: 20px; }
+.upload-link { margin-top: 10px; padding: 10px; background: #eef; display: none; }
+button { padding: 10px 20px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
+<script>
+(function(){
+    emailjs.init("DEIN_PUBLIC_KEY"); // <- Deinen Public Key eintragen
+})();
+
+let answers = [];
+let currentQuestion = 0;
+let questions = [
+    "Frage 1: Haben Sie Unterlagen, die hochgeladen werden müssen?",
+    "Frage 2: Enthält Ihr Antrag zusätzliche Nachweise?",
+    "Frage 3: Liegt eine beglaubigte Kopie vor?",
+    "Frage 4: Müssen Sie ein Foto hochladen?",
+    "Frage 5: Haben Sie eine Vollmacht beizufügen?",
+    "Frage 6: Benötigen wir Ihre Unterschrift als Datei?",
+    "Frage 7: Enthält Ihre Meldung technische Zeichnungen?",
+    "Frage 8: Haben Sie einen Zahlungsbeleg?",
+    "Frage 9: Muss ein Ausweisdokument hochgeladen werden?",
+    "Frage 10: Möchten Sie sonstige Dokumente hochladen?"
+];
+let uploadLink = "";
+let csvData = {};
+
+async function loadCSV() {
+    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/DEIN_REPO/main/data/empfaenger_links.csv");
+    let text = await response.text();
+    let rows = text.trim().split("\n");
+    rows.shift(); // Header entfernen
+    rows.forEach(row => {
+        let [email, link] = row.split(",");
+        csvData[email.trim().toLowerCase()] = link.trim();
+    });
+}
+
+async function startForm() {
+    await loadCSV();
+    let userEmail = prompt("Bitte geben Sie Ihre E-Mail-Adresse ein:");
+    if (!csvData[userEmail.toLowerCase()]) {
+        alert("Kein Upload-Link für diese E-Mail gefunden.");
+        return;
+    }
+    uploadLink = csvData[userEmail.toLowerCase()];
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentQuestion >= questions.length) {
+        document.getElementById("question-container").innerHTML = `
+            <h3>Vielen Dank!</h3>
+            <p>Ihre Antworten werden jetzt gesendet...</p>
+        `;
+        sendAnswers();
+        return;
+    }
+    document.getElementById("question-text").innerText = questions[currentQuestion];
+    document.getElementById("upload").style.display = "none";
+}
+
+function answer(val) {
+    answers.push(`Frage ${currentQuestion+1}: ${val ? 'Ja' : 'Nein'}`);
+    if (val) {
+        document.getElementById("upload-link").href = uploadLink;
+        document.getElementById("upload").style.display = "block";
+    } else {
+        currentQuestion++;
+        showQuestion();
+    }
+}
+
+function nextQuestion() {
+    document.getElementById("upload").style.display = "none";
+    currentQuestion++;
+    showQuestion();
+}
+
+function sendAnswers() {
+    let answerText = answers.join("\n");
+    emailjs.send("DEIN_SERVICE_ID", "DEIN_TEMPLATE_ID", {
+        from_email: "system@fragebogen.de",
+        answers: answerText
+    }).then(function() {
+        document.getElementById("question-container").innerHTML += "<p>Antworten wurden gesendet.</p>";
+    }, function(err) {
+        document.getElementById("question-container").innerHTML += "<p>Fehler beim Senden: " + JSON.stringify(err) + "</p>";
+    });
+}
+
+window.onload = startForm;
+</script>
+</head>
+<body>
+
+<h1>Digitaler Fragebogen</h1>
+<div id="question-container">
+    <p id="question-text"></p>
+    <button onclick="answer(true)">Ja</button>
+    <button onclick="answer(false)">Nein</button>
+    <div id="upload" class="upload-link">
+        <p>Bitte laden Sie Ihre Datei hier hoch:</p>
+        <a id="upload-link" href="#" target="_blank">Zum Upload</a><br><br>
+        <button onclick="nextQuestion()">Weiter</button>
+    </div>
+</div>
+
+</body>
+</html>
