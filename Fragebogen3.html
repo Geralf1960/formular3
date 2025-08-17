@@ -18,7 +18,7 @@ button { padding: 10px 20px; }
 </head>
 <body>
 
-<h2>Fragebogen3 mit Antwortprotokoll per Mail 5</h2>
+<h2>Fragebogen3 mit Antwortprotokoll per Mail 6</h2>
 
 <div id="user-check" style="color: red; margin-top: 15px;"></div>
 
@@ -66,7 +66,7 @@ function getQueryParam(param) {
 }
 
 async function loadExcel() {
-    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/data/Empfaenger-Upload-Links-2.xlsx");
+    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx");
     if (!response.ok) {
         throw new Error("Netzwerkfehler beim Laden der Excel-Datei: " + response.status);
     }
