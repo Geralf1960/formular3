@@ -143,6 +143,7 @@
     emailjs.send("service_b074ymd", "template_omwd93k", {
         from_email: userEmail,
         answers: answerText
+      message: answers
     }).then(function() {
         document.getElementById("question-container").innerHTML +=
           "<p>Antworten wurden erfolgreich gesendet.</p>";
