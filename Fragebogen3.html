@@ -1,47 +1,37 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Digitaler Fragebogen V3</title>
-<style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-.question { margin-bottom: 20px; }
-.upload-link { margin-top: 10px; padding: 10px; background: #eef; display: none; }
-button { padding: 10px 20px; }
-</style>
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  
+  <meta charset="UTF-8">
+  <title>Digitaler Fragebogen</title>
 </head>
 <body>
+  <div id="question-container">
+    <p id="question-text"></p>
+    <div>
+      <button onclick="answer(true)">Ja</button>
+      <button onclick="answer(false)">Nein</button>
+    </div>
+    <div id="upload" style="display:none; margin-top:20px;">
+      <p>Bitte laden Sie Ihre Datei hoch:</p>
+      <a id="upload-link" href="#" target="_blank">Upload starten</a><br><br>
+      <button onclick="nextQuestion()">Weiter</button>
+    </div>
+  </div>
 
-<h2>Fragebogen3 mit Antwortprotokoll per Mail 6</h2>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <!-- SheetJS SDK zum Lesen der Excel-Datei -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<div id="user-check" style="color: red; margin-top: 15px;"></div>
+  <script>
+  (function(){
+      // Deinen EmailJS Public Key eintragen (Account → Integration → Public Key)
+      emailjs.init("ueUbQfFPpdM5MC2z2");
+  })();
 
-<div id="user-info"></div>
-<div id="frage-container" style="display:none;"></div>
-<div id="upload-section" style="display:none;"></div>
-<div id="abschluss" style="display:none;">
-  <h3>Fragebogen abgeschlossen</h3>
-  <p>Ihr Antwortprotokoll wurde als Datei heruntergeladen.</p>
-  <p>Bitte laden Sie diese Datei nun auf Ihre persönliche Uploadseite hoch:</p>
-  <p><a id="uploadLink" href="#" target="_blank">Upload-Link öffnen</a></p>
-</div>
-    
-    
-<script>
-(function(){
-    emailjs.init("ueUbQfFPpdM5MC2z2"); // Deinen EmailJS Public Key
-})();
-
-
-let answers = [];
-let currentQuestion = 0;
-let questions = [
+  let answers = [];
+  let currentQuestion = 0;
+  let questions = [
     "Frage 1: Haben Sie Unterlagen, die hochgeladen werden müssen?",
     "Frage 2: Enthält Ihr Antrag zusätzliche Nachweise?",
     "Frage 3: Liegt eine beglaubigte Kopie vor?",
@@ -52,104 +42,117 @@ let questions = [
     "Frage 8: Haben Sie einen Zahlungsbeleg?",
     "Frage 9: Muss ein Ausweisdokument hochgeladen werden?",
     "Frage 10: Möchten Sie sonstige Dokumente hochladen?"
-];
+  ];
 
-let uploadLinkBase = "";
-let userEmail = "";
-let csvData = {};
+  let uploadLinkBase = "";
+  let userEmail = "";
+  let excelData = {};
 
-
-
-function getQueryParam(param) {
+  function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
-}
+  }
 
-async function loadExcel() {
-    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx");
+  async function loadExcel() {
+    // ⚠️ Pfad anpassen: Datei muss im Repo liegen
+    const excelUrl = "https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx";
+
+    let response = await fetch(excelUrl);
     if (!response.ok) {
-        throw new Error("Netzwerkfehler beim Laden der Excel-Datei: " + response.status);
+      throw new Error("Netzwerkfehler beim Laden der Excel-Datei: " + response.status);
     }
+
     let arrayBuffer = await response.arrayBuffer();
     let workbook = XLSX.read(arrayBuffer, { type: "array" });
 
-    // Erste Tabelle auslesen
     let sheetName = workbook.SheetNames[0];
     let sheet = workbook.Sheets[sheetName];
     let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-    // Email + UploadLink zuordnen
-    csvData = {};
+    excelData = {};
+    // Annahme: Spalte A = Email, Spalte B = UploadLink
     json.slice(1).forEach(row => {
-        if (row[0] && row[1]) {
-            csvData[row[0].trim().toLowerCase()] = row[1].trim();
-        }
+      if (row[0] && row[1]) {
+        excelData[row[0].trim().toLowerCase()] = row[1].trim();
+      }
     });
-}
+  }
 
-async function startForm() {
-    await loadExcel();
-    userEmail = getQueryParam("email");
+  async function startForm() {
+    try {
+      await loadExcel();
+    } catch (e) {
+      document.getElementById("question-container").innerHTML =
+        "<p style='color:red'>Fehler beim Laden der Excel-Datei: " + e.message + "</p>";
+      return;
+    }
+
+    userEmail = getQueryParam("user");
     if (!userEmail) {
-        document.getElementById("question-container").innerHTML = "<p style='color:red'>Fehler: Keine E-Mail-Adresse in der URL gefunden.</p>";
-        return;
+      document.getElementById("question-container").innerHTML =
+        "<p style='color:red'>Fehler: Keine E-Mail-Adresse in der URL gefunden.</p>";
+      return;
     }
-    if (!csvData[userEmail.toLowerCase()]) {
-        document.getElementById("question-container").innerHTML = `<p style='color:red'>Kein Upload-Link für ${userEmail} gefunden.</p>`;
-        return;
-    }
-    uploadLinkBase = csvData[userEmail.toLowerCase()];
-    showQuestion();
-}
 
-function showQuestion() {
+    if (!excelData[userEmail.toLowerCase()]) {
+      document.getElementById("question-container").innerHTML =
+        `<p style='color:red'>Kein Upload-Link für ${userEmail} gefunden.</p>`;
+      return;
+    }
+
+    uploadLinkBase = excelData[userEmail.toLowerCase()];
+    showQuestion();
+  }
+
+  function showQuestion() {
     if (currentQuestion >= questions.length) {
-        document.getElementById("question-container").innerHTML = `
-            <h3>Vielen Dank!</h3>
-            <p>Ihre Antworten werden jetzt gesendet...</p>
-        `;
-        sendAnswers();
-        return;
+      document.getElementById("question-container").innerHTML = `
+        <h3>Vielen Dank!</h3>
+        <p>Ihre Antworten werden jetzt gesendet...</p>
+      `;
+      sendAnswers();
+      return;
     }
     document.getElementById("question-text").innerText = questions[currentQuestion];
     document.getElementById("upload").style.display = "none";
-}
+  }
 
-function answer(val) {
+  function answer(val) {
     answers.push(`Frage ${currentQuestion+1}: ${val ? 'Ja' : 'Nein'}`);
     if (val) {
-        let linkWithEmail = uploadLinkBase.includes("?") 
-            ? `${uploadLinkBase}&email=${encodeURIComponent(userEmail)}` 
-            : `${uploadLinkBase}?email=${encodeURIComponent(userEmail)}`;
+      let linkWithEmail = uploadLinkBase.includes("?")
+        ? `${uploadLinkBase}&email=${encodeURIComponent(userEmail)}`
+        : `${uploadLinkBase}?email=${encodeURIComponent(userEmail)}`;
 
-        document.getElementById("upload-link").href = linkWithEmail;
-        document.getElementById("upload").style.display = "block";
+      document.getElementById("upload-link").href = linkWithEmail;
+      document.getElementById("upload").style.display = "block";
     } else {
-        currentQuestion++;
-        showQuestion();
+      currentQuestion++;
+      showQuestion();
     }
-}
+  }
 
-function nextQuestion() {
+  function nextQuestion() {
     document.getElementById("upload").style.display = "none";
     currentQuestion++;
     showQuestion();
-}
+  }
 
-function sendAnswers() {
+  function sendAnswers() {
     let answerText = answers.join("\n");
     emailjs.send("service_b074ymd", "template_omwd93k", {
         from_email: userEmail,
         answers: answerText
     }).then(function() {
-        document.getElementById("question-container").innerHTML += "<p>Antworten wurden gesendet.</p>";
+        document.getElementById("question-container").innerHTML +=
+          "<p>Antworten wurden erfolgreich gesendet.</p>";
     }, function(err) {
-        document.getElementById("question-container").innerHTML += "<p>Fehler beim Senden: " + JSON.stringify(err) + "</p>";
+        document.getElementById("question-container").innerHTML +=
+          "<p style='color:red'>Fehler beim Senden: " + JSON.stringify(err) + "</p>";
     });
-}
+  }
 
-window.onload = startForm;
-</script>
-
+  window.onload = startForm;
+  </script>
 </body>
 </html>
