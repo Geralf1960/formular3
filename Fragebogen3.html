@@ -66,8 +66,11 @@ function getQueryParam(param) {
 }
 
 async function loadExcel() {
-    let response = fetch ("https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx");
-    let arrayBuffer = response.arrayBuffer();
+    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/data/Empfaenger-Upload-Links-2.xlsx");
+    if (!response.ok) {
+        throw new Error("Netzwerkfehler beim Laden der Excel-Datei: " + response.status);
+    }
+    let arrayBuffer = await response.arrayBuffer();
     let workbook = XLSX.read(arrayBuffer, { type: "array" });
 
     // Erste Tabelle auslesen
@@ -75,7 +78,8 @@ async function loadExcel() {
     let sheet = workbook.Sheets[sheetName];
     let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-    // Annahme: Erste Zeile ist Header: Email | UploadLink
+    // Email + UploadLink zuordnen
+    csvData = {};
     json.slice(1).forEach(row => {
         if (row[0] && row[1]) {
             csvData[row[0].trim().toLowerCase()] = row[1].trim();
