@@ -18,7 +18,7 @@ button { padding: 10px 20px; }
 </head>
 <body>
 
-<h2>Fragebogen3 mit Antwortprotokoll per Mail 2</h2>
+<h2>Fragebogen3 mit Antwortprotokoll per Mail 3</h2>
 
 <div id="user-check" style="color: red; margin-top: 15px;"></div>
 
@@ -66,7 +66,7 @@ function getQueryParam(param) {
 }
 
 async function loadExcel() {
-    let response = fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx");
+    let response = fetch ("Empfaenger-Upload-Links-2.xlsx");
     let arrayBuffer = response.arrayBuffer();
     let workbook = XLSX.read(arrayBuffer, { type: "array" });
 
