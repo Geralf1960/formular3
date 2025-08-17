@@ -15,7 +15,7 @@ button { padding: 10px 20px; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 (function(){
-    emailjs.init("DEIN_PUBLIC_KEY"); // Deinen EmailJS Public Key
+    emailjs.init("ueUbQfFPpdM5MC2z2"); // Deinen EmailJS Public Key
 })();
 
 let answers = [];
@@ -43,7 +43,7 @@ function getQueryParam(param) {
 }
 
 async function loadExcel() {
-    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/DEIN_REPO/main/data/Empfaenger-Upload-Links.xlsx");
+    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/data/Empfaenger-Upload-Links-2.xlsx");
     let arrayBuffer = await response.arrayBuffer();
     let workbook = XLSX.read(arrayBuffer, { type: "array" });
 
@@ -111,7 +111,7 @@ function nextQuestion() {
 
 function sendAnswers() {
     let answerText = answers.join("\n");
-    emailjs.send("DEIN_SERVICE_ID", "DEIN_TEMPLATE_ID", {
+    emailjs.send("service_b074ymd", "template_omwd93k", {
         from_email: userEmail,
         answers: answerText
     }).then(function() {
