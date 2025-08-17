@@ -13,7 +13,25 @@ button { padding: 10px 20px; }
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
+</head>
+<body>
+
+<h2>Fragebogen3 mit Antwortprotokoll</h2>
+
+<div id="user-check" style="color: red; margin-top: 15px;"></div>
+
+<div id="user-info"></div>
+<div id="frage-container" style="display:none;"></div>
+<div id="upload-section" style="display:none;"></div>
+<div id="abschluss" style="display:none;">
+  <h3>Fragebogen abgeschlossen</h3>
+  <p>Ihr Antwortprotokoll wurde als Datei heruntergeladen.</p>
+  <p>Bitte laden Sie diese Datei nun auf Ihre persönliche Uploadseite hoch:</p>
+  <p><a id="uploadLink" href="#" target="_blank">Upload-Link öffnen</a></p>
+</div>
+    
+    
+    <script>
 (function(){
     emailjs.init("ueUbQfFPpdM5MC2z2"); // Deinen EmailJS Public Key
 })();
@@ -123,21 +141,6 @@ function sendAnswers() {
 
 window.onload = startForm;
 </script>
-
-</head>
-<body>
-
-<h1>Digitaler Fragebogen</h1>
-<div id="question-container">
-    <p id="question-text"></p>
-    <button onclick="answer(true)">Ja</button>
-    <button onclick="answer(false)">Nein</button>
-    <div id="upload" class="upload-link">
-        <p>Bitte laden Sie Ihre Datei hier hoch:</p>
-        <a id="upload-link" href="#" target="_blank">Zum Upload</a><br><br>
-        <button onclick="nextQuestion()">Weiter</button>
-    </div>
-</div>
 
 </body>
 </html>
