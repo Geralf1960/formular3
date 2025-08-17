@@ -10,7 +10,7 @@ body { font-family: Arial, sans-serif; margin: 20px; }
 .upload-link { margin-top: 10px; padding: 10px; background: #eef; display: none; }
 button { padding: 10px 20px; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
+
 <script>
 (function(){
     emailjs.init("DEIN_PUBLIC_KEY"); // <- Deinen Public Key eintragen
@@ -30,8 +30,9 @@ let questions = [
     "Frage 9: Muss ein Ausweisdokument hochgeladen werden?",
     "Frage 10: Möchten Sie sonstige Dokumente hochladen?"
 ];
-let uploadLink = "";
+let uploadLinkBase = "";
 let csvData = {};
+let userEmail = "";
 
 async function loadCSV() {
     let response = await fetch("https://raw.githubusercontent.com/Geralf1960/DEIN_REPO/main/data/empfaenger_links.csv");
@@ -46,12 +47,12 @@ async function loadCSV() {
 
 async function startForm() {
     await loadCSV();
-    let userEmail = prompt("Bitte geben Sie Ihre E-Mail-Adresse ein:");
+    userEmail = prompt("Bitte geben Sie Ihre E-Mail-Adresse ein:");
     if (!csvData[userEmail.toLowerCase()]) {
         alert("Kein Upload-Link für diese E-Mail gefunden.");
         return;
     }
-    uploadLink = csvData[userEmail.toLowerCase()];
+    uploadLinkBase = csvData[userEmail.toLowerCase()];
     showQuestion();
 }
 
@@ -71,7 +72,12 @@ function showQuestion() {
 function answer(val) {
     answers.push(`Frage ${currentQuestion+1}: ${val ? 'Ja' : 'Nein'}`);
     if (val) {
-        document.getElementById("upload-link").href = uploadLink;
+        // Email als Parameter an Upload-Link anhängen
+        let linkWithEmail = uploadLinkBase.includes("?") 
+            ? `${uploadLinkBase}&email=${encodeURIComponent(userEmail)}` 
+            : `${uploadLinkBase}?email=${encodeURIComponent(userEmail)}`;
+
+        document.getElementById("upload-link").href = linkWithEmail;
         document.getElementById("upload").style.display = "block";
     } else {
         currentQuestion++;
@@ -88,7 +94,7 @@ function nextQuestion() {
 function sendAnswers() {
     let answerText = answers.join("\n");
     emailjs.send("DEIN_SERVICE_ID", "DEIN_TEMPLATE_ID", {
-        from_email: "system@fragebogen.de",
+        from_email: userEmail,
         answers: answerText
     }).then(function() {
         document.getElementById("question-container").innerHTML += "<p>Antworten wurden gesendet.</p>";
@@ -99,6 +105,8 @@ function sendAnswers() {
 
 window.onload = startForm;
 </script>
+
+
 </head>
 <body>
 
