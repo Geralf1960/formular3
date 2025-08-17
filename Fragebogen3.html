@@ -11,9 +11,11 @@ body { font-family: Arial, sans-serif; margin: 20px; }
 button { padding: 10px 20px; }
 </style>
 
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 (function(){
-    emailjs.init("DEIN_PUBLIC_KEY"); // <- Deinen Public Key eintragen
+    emailjs.init("DEIN_PUBLIC_KEY"); // Deinen EmailJS Public Key
 })();
 
 let answers = [];
@@ -30,26 +32,43 @@ let questions = [
     "Frage 9: Muss ein Ausweisdokument hochgeladen werden?",
     "Frage 10: Möchten Sie sonstige Dokumente hochladen?"
 ];
-let uploadLinkBase = "";
-let csvData = {};
-let userEmail = "";
 
-async function loadCSV() {
-    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/DEIN_REPO/main/data/empfaenger_links.csv");
-    let text = await response.text();
-    let rows = text.trim().split("\n");
-    rows.shift(); // Header entfernen
-    rows.forEach(row => {
-        let [email, link] = row.split(",");
-        csvData[email.trim().toLowerCase()] = link.trim();
+let uploadLinkBase = "";
+let userEmail = "";
+let csvData = {};
+
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+async function loadExcel() {
+    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/DEIN_REPO/main/data/Empfaenger-Upload-Links.xlsx");
+    let arrayBuffer = await response.arrayBuffer();
+    let workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+    // Erste Tabelle auslesen
+    let sheetName = workbook.SheetNames[0];
+    let sheet = workbook.Sheets[sheetName];
+    let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+    // Annahme: Erste Zeile ist Header: Email | UploadLink
+    json.slice(1).forEach(row => {
+        if (row[0] && row[1]) {
+            csvData[row[0].trim().toLowerCase()] = row[1].trim();
+        }
     });
 }
 
 async function startForm() {
-    await loadCSV();
-    userEmail = prompt("Bitte geben Sie Ihre E-Mail-Adresse ein:");
+    await loadExcel();
+    userEmail = getQueryParam("email");
+    if (!userEmail) {
+        document.getElementById("question-container").innerHTML = "<p style='color:red'>Fehler: Keine E-Mail-Adresse in der URL gefunden.</p>";
+        return;
+    }
     if (!csvData[userEmail.toLowerCase()]) {
-        alert("Kein Upload-Link für diese E-Mail gefunden.");
+        document.getElementById("question-container").innerHTML = `<p style='color:red'>Kein Upload-Link für ${userEmail} gefunden.</p>`;
         return;
     }
     uploadLinkBase = csvData[userEmail.toLowerCase()];
@@ -72,7 +91,6 @@ function showQuestion() {
 function answer(val) {
     answers.push(`Frage ${currentQuestion+1}: ${val ? 'Ja' : 'Nein'}`);
     if (val) {
-        // Email als Parameter an Upload-Link anhängen
         let linkWithEmail = uploadLinkBase.includes("?") 
             ? `${uploadLinkBase}&email=${encodeURIComponent(userEmail)}` 
             : `${uploadLinkBase}?email=${encodeURIComponent(userEmail)}`;
@@ -105,7 +123,6 @@ function sendAnswers() {
 
 window.onload = startForm;
 </script>
-
 
 </head>
 <body>
