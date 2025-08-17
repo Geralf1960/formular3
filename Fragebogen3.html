@@ -31,7 +31,7 @@ button { padding: 10px 20px; }
 </div>
     
     
-    <script>
+<script>
 (function(){
     emailjs.init("ueUbQfFPpdM5MC2z2"); // Deinen EmailJS Public Key
 })();
@@ -61,8 +61,8 @@ function getQueryParam(param) {
 }
 
 function loadExcel() {
-    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx");
-    let arrayBuffer = await response.arrayBuffer();
+    let response = fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx");
+    let arrayBuffer = response.arrayBuffer();
     let workbook = XLSX.read(arrayBuffer, { type: "array" });
 
     // Erste Tabelle auslesen
