@@ -34,8 +34,8 @@ button { padding: 10px 20px; }
 <script>
 (function(){
     emailjs.init("ueUbQfFPpdM5MC2z2"); // Deinen EmailJS Public Key
-})();
-<h3>nach emailjs init</h3>
+});
+
 
 let answers = [];
 let currentQuestion = 0;
@@ -55,6 +55,8 @@ let questions = [
 let uploadLinkBase = "";
 let userEmail = "";
 let csvData = {};
+
+
 
 function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
