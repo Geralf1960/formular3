@@ -61,7 +61,7 @@ function getQueryParam(param) {
 }
 
 async function loadExcel() {
-    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/data/Empfaenger-Upload-Links-2.xlsx");
+    let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx");
     let arrayBuffer = await response.arrayBuffer();
     let workbook = XLSX.read(arrayBuffer, { type: "array" });
 
