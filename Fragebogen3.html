@@ -60,7 +60,7 @@ function getQueryParam(param) {
     return urlParams.get(param);
 }
 
-async function loadExcel() {
+function loadExcel() {
     let response = await fetch("https://raw.githubusercontent.com/Geralf1960/formular3/main/Empfaenger-Upload-Links-2.xlsx");
     let arrayBuffer = await response.arrayBuffer();
     let workbook = XLSX.read(arrayBuffer, { type: "array" });
@@ -78,7 +78,7 @@ async function loadExcel() {
     });
 }
 
-async function startForm() {
+function startForm() {
     await loadExcel();
     userEmail = getQueryParam("email");
     if (!userEmail) {
