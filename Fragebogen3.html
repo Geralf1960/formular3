@@ -12,11 +12,16 @@
       <button onclick="answer(true)">Ja</button>
       <button onclick="answer(false)">Nein</button>
     </div>
-    <div id="upload" style="display:none; margin-top:20px;">
-      <p>Bitte laden Sie Ihre Datei hoch:</p>
-      <a id="upload-link" href="#" target="_blank">Upload starten</a><br><br>
-      <button onclick="nextQuestion()">Weiter</button>
-    </div>
+   <div id="upload" style="display:none; margin-top:20px;">
+   <p>Bitte laden Sie Ihre Datei hoch:</p>
+  <a id="upload-link" href="#" target="_blank">Upload starten</a><br><br>
+  
+  <label for="comment">Zusatztext (max. 250 Zeichen):</label><br>
+  <textarea id="comment" maxlength="250" rows="3" style="width:100%;"></textarea><br><br>
+  
+  <button onclick="nextQuestion()">Weiter</button>
+</div>
+
   </div>
 
   <!-- EmailJS SDK -->
@@ -133,11 +138,16 @@
     }
   }
 
-  function nextQuestion() {
-    document.getElementById("upload").style.display = "none";
-    currentQuestion++;
-    showQuestion();
+function nextQuestion() {
+  let comment = document.getElementById("comment").value.trim();
+  if (comment) {
+    answers[answers.length - 1] += ` | Kommentar: ${comment}`;
   }
+  document.getElementById("comment").value = ""; // Feld zurücksetzen
+  document.getElementById("upload").style.display = "none";
+  currentQuestion++;
+  showQuestion();
+}
 
   function sendAnswers() {
     let answerText = answers.join("\n");
